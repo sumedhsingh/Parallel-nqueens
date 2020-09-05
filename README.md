@@ -13,7 +13,9 @@ The primary objective of this exercise is to practice using threads in a simple 
 ### Description of Behaviour
 The starter code as provided does a sequential version of solving the problem. It takes as its argument the size of the board to use. Choosing a very large board will take a very long time, so choose something more reasonable (approximately 13).
 
-The goal is to rewrite the provided program so that the the calculation of the number of valid solutions is completed in parallel by multiple threads. The externally visible behaviour of the program should not change, and you should not have any race conditions.
+The goal is to rewrite the provided program so that the the calculation of the number of valid solutions is completed in parallel by multiple threads (for simplicity, make `n` threads for a chessboard of size NxN). The externally visible behaviour of the program should not change, and you should not have any race conditions.
+
+To divide the work up amongst multiple threads, you need a strategy for how to share the work. One suggestion (that you do not have to follow if you prefer another strategy) is to create each of the threads with a different initial condition. 
 
 ### General Guidance 
 
