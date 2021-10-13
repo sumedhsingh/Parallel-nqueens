@@ -1,8 +1,7 @@
 RM = rm -rf
 
 CC = gcc
-CFLAGS = -O2 -std=c99 -D_GNU_SOURCE
-OMPFLAGS = -fopenmp -Wall
+CFLAGS = -O2 -std=c99 -pthread -D_GNU_SOURCE
 
 all: bin nqueens
 
