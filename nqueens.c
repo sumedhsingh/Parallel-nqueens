@@ -4,6 +4,7 @@
 #include <string.h>
 #include <pthread.h>
 
+// struct for storing arguments passed to nqueens
 typedef struct{
     char* config;
     int n;
@@ -61,9 +62,10 @@ void nqueens(char *config, int n, int i)
     return;
 }
 
+// function for calling nqueens with args and deallocating memory
 void* arg_thread(void* arg)
 {
-    thread_args* args = (thread_args*) arg;
+    thread_args* args = (thread_args*) arg;  // set void* to thread_args*
     nqueens(args->config, args->n, args->i);
     free(args->config);
     free(args);
@@ -87,9 +89,9 @@ int create_thread (int nthreads)
             free(args);
             return -1;
         }
-        memset(args->config, 0, sizeof(char)*nthreads);
+        memset(args->config, 0, sizeof(char)*nthreads); //imp step
         args->n = nthreads;
-        args->i = 1;
+        args->i = 1;                                    // row 0 has already been configured
         args->config[0] = i;
 
         if (pthread_create(&threads[i], NULL, arg_thread, args) != 0){
@@ -101,7 +103,7 @@ int create_thread (int nthreads)
     }
 
     for(int i=0; i<nthreads; i++){
-        pthread_join(threads[i], NULL);
+        pthread_join(threads[i], NULL);             // collect all threads here
     }
 
     return 0;
@@ -110,7 +112,6 @@ int create_thread (int nthreads)
 int main(int argc, char *argv[])
 {
     int n;
-    //char *config;
 
     if (argc < 2)
     {
@@ -119,10 +120,8 @@ int main(int argc, char *argv[])
     }
 
     n = atoi(argv[1]);
-    //config = malloc(n * sizeof(char));
 
     printf("running queens %d\n", n);
-    //nqueens(config, n, 0);
     if(create_thread(n) != 0){
         fprintf(stderr, "Error creating threads\n");
         return -1;
