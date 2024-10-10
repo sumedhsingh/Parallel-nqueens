@@ -2,7 +2,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 
+typedef struct{
+    char* config;
+    int n;
+    int i;
+} thread_args;
+
+// add a mutex for thread safety
+pthread_mutex_t mutext = PTHREAD_MUTEX_INITIALIZER;
+
+// checks if placing queen at coordinates (i,j) is safe
+// 1:safe 0:unsafe
 int safe(char * config, int i, int j)
 {
     int r, s;
@@ -18,21 +30,26 @@ int safe(char * config, int i, int j)
 
 int count = 0;
 
+// recursively places queens on all columns of a row and proceeds to next row until n is reached
+// returns number of valid configurations
 void nqueens(char *config, int n, int i)
 {
     char *new_config;
     int j;
-
+    
     if (i==n)
     {
+        pthread_mutex_lock(&mutext); //critical section begins
         count++;
+        pthread_mutex_unlock(&mutext); //critical section ends
     }
+    
     
     /* try each possible position for queen <i> */
     for (j=0; j<n; j++)
     {
         /* allocate a temporary array and copy the config into it */
-        new_config = malloc((i+1)*sizeof(char));
+        new_config = malloc((i+1)*sizeof(char)); //change to n or not?
         memcpy(new_config, config, i*sizeof(char));
         if (safe(new_config, i, j))
         {
@@ -44,10 +61,56 @@ void nqueens(char *config, int n, int i)
     return;
 }
 
+void* arg_thread(void* arg)
+{
+    thread_args* args = (thread_args*) arg;
+    nqueens(args->config, args->n, args->i);
+    free(args->config);
+    free(args);
+    return NULL;
+}
+
+//creates n threads
+int create_thread (int nthreads)
+{
+    pthread_t threads[nthreads];
+
+    for(int i=0; i<nthreads; i++){
+        thread_args* args = malloc(sizeof(thread_args));
+        if (args == NULL){
+            fprintf(stderr, "Error to allocate memory for thread_args struct\n");
+            return -1;
+        }
+        args->config = malloc(nthreads*sizeof(char));
+        if(args->config == NULL){
+            fprintf(stderr, "Error to allocate memory for config\n");
+            free(args);
+            return -1;
+        }
+        memset(args->config, 0, sizeof(char)*nthreads);
+        args->n = nthreads;
+        args->i = 1;
+        args->config[0] = i;
+
+        if (pthread_create(&threads[i], NULL, arg_thread, args) != 0){
+            fprintf(stderr, "Failed to create thread for column %d\n",i);
+            free(args->config);
+            free(args);
+            return -1;
+        }
+    }
+
+    for(int i=0; i<nthreads; i++){
+        pthread_join(threads[i], NULL);
+    }
+
+    return 0;
+}
+
 int main(int argc, char *argv[])
 {
     int n;
-    char *config;
+    //char *config;
 
     if (argc < 2)
     {
@@ -56,10 +119,15 @@ int main(int argc, char *argv[])
     }
 
     n = atoi(argv[1]);
-    config = malloc(n * sizeof(char));
+    //config = malloc(n * sizeof(char));
 
     printf("running queens %d\n", n);
-    nqueens(config, n, 0);
+    //nqueens(config, n, 0);
+    if(create_thread(n) != 0){
+        fprintf(stderr, "Error creating threads\n");
+        return -1;
+    }
+    
     printf("# solutions: %d\n", count);
 
     return 0;
