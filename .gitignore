@@ -44,7 +44,6 @@
 
 # LaTeX
 *.aux
-*.lof
 *.log
 *.lot
 *.fls
